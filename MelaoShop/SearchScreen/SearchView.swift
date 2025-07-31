@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct SearchView: View {
-    @State private var searchText = String()
+    @State private var searchText: String = String()
+    @State var navigate: Bool = false
     @ObservedObject private var viewModel: SearchViewModel
     
     init(viewModel: SearchViewModel) {
@@ -25,14 +26,17 @@ struct SearchView: View {
     
     var body: some View {
         NavigationStack {
-            Text("Looking for \(searchText)")
-                .navigationTitle("Search")
+            Text("O que gostaria de pesquisar hoje?")
+                .navigationTitle("Buscar")
+                .navigationDestination(isPresented: $navigate) {
+                    ResultOfSearchView(searchText: searchText.lowercased())
+                }
             
             Spacer()
         }
         .searchable(text: $searchText) {
             ForEach(resultOfSearch, id: \.self) { category in
-                Text("Looking for \(category)?").searchCompletion(category)
+                Text("Procurando por \(category)?").searchCompletion(category)
             }
         }
         .onAppear {
@@ -42,7 +46,7 @@ struct SearchView: View {
     }
     
     func searchAction() {
-        print("Search")
+        navigate.toggle()
     }
 }
 
