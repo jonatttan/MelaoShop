@@ -33,7 +33,7 @@
 		099F23872E39F5C5007EA3D7 /* MelaoShop */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			explicitFolders = (
-				Network/Mocks,
+				Services/Mocks,
 			);
 			path = MelaoShop;
 			sourceTree = "<group>";

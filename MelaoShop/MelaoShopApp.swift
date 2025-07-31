@@ -11,7 +11,7 @@ import SwiftUI
 struct MelaoShopApp: App {
     var body: some Scene {
         WindowGroup {
-            SearchView()
+            SearchView(viewModel: SearchViewModel(isMock: true))
         }
     }
 }

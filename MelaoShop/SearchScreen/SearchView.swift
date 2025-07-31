@@ -9,14 +9,17 @@ import SwiftUI
 
 struct SearchView: View {
     @State private var searchText = String()
-    @State var categories = [String]()
+    @ObservedObject private var viewModel: SearchViewModel
+    
+    init(viewModel: SearchViewModel) {
+        self.viewModel = viewModel
+    }
     
     var resultOfSearch: [String] {
         if searchText.isEmpty {
-            return categories
+            return viewModel.categories
         } else {
-            print(searchText)
-            return categories.filter { $0.contains(searchText.lowercased()) }
+            return viewModel.categories.filter { $0.contains(searchText.lowercased()) }
         }
     }
     
@@ -32,26 +35,17 @@ struct SearchView: View {
                 Text("Looking for \(category)?").searchCompletion(category)
             }
         }
-        .onAppear(perform: loadCategories)
+        .onAppear {
+            viewModel.loadCategories()
+        }
         .onSubmit(of: .search, searchAction)
     }
     
     func searchAction() {
-//        provider.runSearch()
-    }
-    
-    func loadCategories() {
-        guard let resourcesURL = Bundle.main.resourceURL?.appendingPathComponent("Mocks") else {
-            return
-        }
-        
-        let folderContents = try? FileManager.default.contentsOfDirectory(at: resourcesURL, includingPropertiesForKeys: nil)
-        
-        let categories = folderContents?.compactMap { $0.lastPathComponent } ?? []
-        return self.categories = categories
+        print("Search")
     }
 }
 
 #Preview {
-    SearchView()
+    SearchView(viewModel: SearchViewModel(isMock: true))
 }
