@@ -17,7 +17,7 @@ struct ResultOfSearchView: View {
             
             List(products, id: \.id) { product in
                 NavigationLink {
-                    DetailView(viewModel: DetailViewModel(isMock: true, relativePath: "\(searchText)/item-\(product.id)"))
+                    DetailView(relativePath: "\(searchText)/item-\(product.id)")
                 } label: {
                     Text(product.title)
                 }

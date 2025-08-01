@@ -10,9 +10,9 @@ class SearchViewModel: ObservableObject {
     @Published var categories: [String]
     private let provider: ServiceProviderProtocol
     
-    init(isMock: Bool) {
+    init() {
         self.categories = []
-        self.provider = isMock ? ServiceProviderMock() : ServiceProvider()
+        self.provider = kIsMock ? ServiceProviderMock() : ServiceProvider()
     }
     
     func loadCategories() {

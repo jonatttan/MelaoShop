@@ -10,11 +10,7 @@ import SwiftUI
 struct SearchView: View {
     @State private var searchText: String = String()
     @State var navigate: Bool = false
-    @ObservedObject private var viewModel: SearchViewModel
-    
-    init(viewModel: SearchViewModel) {
-        self.viewModel = viewModel
-    }
+    @ObservedObject private var viewModel = SearchViewModel()
     
     var resultOfSearch: [String] {
         if searchText.isEmpty {
@@ -51,5 +47,5 @@ struct SearchView: View {
 }
 
 #Preview {
-    SearchView(viewModel: SearchViewModel(isMock: true))
+    SearchView()
 }

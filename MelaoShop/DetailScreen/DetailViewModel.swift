@@ -13,8 +13,8 @@ class DetailViewModel: ObservableObject {
     private let relativePath: String
     private let provider: ServiceProviderProtocol
     
-    init(isMock: Bool, relativePath: String) {
-        self.provider = isMock ? ServiceProviderMock() : ServiceProvider()
+    init(relativePath: String) {
+        self.provider = kIsMock ? ServiceProviderMock() : ServiceProvider()
         self.relativePath = relativePath
     }
     

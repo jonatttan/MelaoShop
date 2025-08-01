@@ -9,8 +9,8 @@ import SwiftUI
 struct DetailView: View {
     @ObservedObject var viewModel: DetailViewModel
     
-    init(viewModel: DetailViewModel) {
-        self.viewModel = viewModel
+    init(relativePath: String) {
+        self.viewModel = DetailViewModel(relativePath: relativePath)
     }
     
     var body: some View {
@@ -82,5 +82,5 @@ struct DetailView: View {
 }
 
 #Preview {
-    DetailView(viewModel: DetailViewModel(isMock: true, relativePath: "cafe/item-MLB3998144995"))
+    DetailView(relativePath: "cafe/item-MLB3998144995")
 }
