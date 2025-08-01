@@ -16,7 +16,11 @@ struct ResultOfSearchView: View {
             Text("Buscar > \(searchText)").multilineTextAlignment(.leading)
             
             List(products, id: \.id) { product in
-                Text(product.title)
+                NavigationLink {
+                    DetailView(viewModel: DetailViewModel(isMock: true, relativePath: "\(searchText)/item-\(product.id)"))
+                } label: {
+                    Text(product.title)
+                }
             }
             .navigationTitle("Resultado da busca")
         }
