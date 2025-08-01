@@ -7,15 +7,19 @@
 import Foundation
 
 protocol ServiceProviderProtocol {
-    func loadCategories(completion: @escaping ([String]) -> Void)
+    func getCategories(completion: @escaping ([String]) -> Void)
+    func getProducts(searchText: String, completion: @escaping (ResultOfSearchModel?) -> Void)
     func getMainDetail(from relativePath: String, completion: @escaping (DetailModel.MainDetail?) -> Void)
     func getDescriptionDetail(from relativePath: String, completion: @escaping (DetailModel.DescriptionDetail?) -> Void)
     func getCategoryDetail(from relativePath: String, completion: @escaping (DetailModel.CategoryDetail?) -> Void)
 }
 
 class ServiceProvider: ServiceProviderProtocol {
-    func loadCategories(completion: @escaping ([String]) -> Void) {
+    func getCategories(completion: @escaping ([String]) -> Void) {
         completion([])
+    }
+    func getProducts(searchText: String, completion: @escaping (ResultOfSearchModel?) -> Void) {
+        completion(nil)
     }
     
     func getMainDetail(from relativePath: String, completion: @escaping (DetailModel.MainDetail?) -> Void) {
@@ -33,7 +37,7 @@ class ServiceProvider: ServiceProviderProtocol {
 
 class ServiceProviderMock: ServiceProviderProtocol {
     // MARK: - Search screen
-    func loadCategories(completion: @escaping ([String]) -> Void) {
+    func getCategories(completion: @escaping ([String]) -> Void) {
         guard let resourcesURL = Bundle.main.resourceURL?.appendingPathComponent("Mocks") else {
             return completion([])
         }
@@ -41,6 +45,21 @@ class ServiceProviderMock: ServiceProviderProtocol {
         let folderContents = try? FileManager.default.contentsOfDirectory(at: resourcesURL, includingPropertiesForKeys: nil)
         let categories = folderContents?.compactMap { $0.lastPathComponent } ?? []
         return completion(categories)
+    }
+    
+    // MARK: - ResultOfSearch screen
+    func getProducts(searchText: String, completion: @escaping (ResultOfSearchModel?) -> Void) {
+        guard let jsonUrl = Bundle.main.resourceURL?.appendingPathComponent("Mocks/\(searchText)/search-MLA-\(searchText).json") else {
+            return completion(nil)
+        }
+        print(jsonUrl)
+        if let data = try? Data(contentsOf: jsonUrl),
+           let products = try? JSONDecoder().decode(ResultOfSearchModel.self, from: data){
+            return completion(products)
+        }
+        else {
+            return completion(nil)
+        }
     }
     
     // MARK: - Detail screen

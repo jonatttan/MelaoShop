@@ -12,5 +12,6 @@ struct ResultOfSearchModel: Decodable{
     struct Product: Decodable {
         let id: String
         let title: String
+        let price: Double
     }
 }

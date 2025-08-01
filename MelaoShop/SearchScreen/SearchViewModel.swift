@@ -17,7 +17,7 @@ class SearchViewModel: ObservableObject {
     
     func loadCategories() {
         DispatchQueue.main.async {
-            self.provider.loadCategories { result in
+            self.provider.getCategories { result in
                 self.categories = result
             }
         }

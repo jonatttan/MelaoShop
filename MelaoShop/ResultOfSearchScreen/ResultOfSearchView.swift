@@ -7,47 +7,24 @@
 import SwiftUI
 
 struct ResultOfSearchView: View {
-    let searchText: String
-    @State var products = [ResultOfSearchModel.Product]()
+    @ObservedObject var viewModel: ResultOfSearchViewModel
+    
+    init(searchText: String) {
+        viewModel = ResultOfSearchViewModel(searchText: searchText)
+    }
     
     var body: some View {
         NavigationStack {
-            
-            Text("Buscar > \(searchText)").multilineTextAlignment(.leading)
-            
-            List(products, id: \.id) { product in
+            List(viewModel.products, id: \.id) { product in
                 NavigationLink {
-                    DetailView(relativePath: "\(searchText)/item-\(product.id)")
+                    DetailView(relativePath: "\(viewModel.searchText)/item-\(product.id)")
                 } label: {
-                    Text(product.title)
+                    ProductCardComponentView(product.title, product.price)
                 }
             }
             .navigationTitle("Resultado da busca")
         }
-        .onAppear {
-            DispatchQueue.main.async {
-                loadProducts { result in
-                    guard let result else {
-                        return print("falhou")
-                    }
-                    self.products = result.results
-                }
-            }
-        }
-    }
-    
-    func loadProducts(completion: @escaping (ResultOfSearchModel?) -> Void) {
-        guard let jsonUrl = Bundle.main.resourceURL?.appendingPathComponent("Mocks/\(searchText)/search-MLA-\(searchText).json") else {
-            return completion(nil)
-        }
-        print(jsonUrl)
-        if let data = try? Data(contentsOf: jsonUrl),
-           let products = try? JSONDecoder().decode(ResultOfSearchModel.self, from: data){
-            return completion(products)
-        }
-        else {
-            return completion(nil)
-        }
+        .onAppear(perform: viewModel.getProducts)
     }
 }
 
