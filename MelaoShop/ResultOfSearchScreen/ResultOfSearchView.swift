@@ -14,6 +14,19 @@ struct ResultOfSearchView: View {
     }
     
     var body: some View {
+        ZStack {
+            if viewModel.hasError {
+                Text(viewModel.errorMessage)
+                    .padding()
+            } else {
+                resultOfSearchViewElement
+            }
+        }
+        .onAppear(perform: viewModel.getProducts)
+    }
+    
+    @ViewBuilder
+    var resultOfSearchViewElement: some View {
         NavigationStack {
             List(viewModel.products, id: \.id) { product in
                 NavigationLink {
@@ -24,7 +37,6 @@ struct ResultOfSearchView: View {
             }
             .navigationTitle("Resultado da busca")
         }
-        .onAppear(perform: viewModel.getProducts)
     }
 }
 

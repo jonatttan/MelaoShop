@@ -5,106 +5,144 @@
 //  Created by Jonattan Sousa on 31/07/25.
 //
 import Foundation
+enum NetworkError: Error {
+    case invalidURL
+    case decodingFailed
+    case noData
+    case otherError(Error)
+}
 
 protocol ServiceProviderProtocol {
-    func getCategories(completion: @escaping ([String]) -> Void)
-    func getProducts(searchText: String, completion: @escaping (ResultOfSearchModel?) -> Void)
-    func getMainDetail(from relativePath: String, completion: @escaping (DetailModel.MainDetail?) -> Void)
-    func getDescriptionDetail(from relativePath: String, completion: @escaping (DetailModel.DescriptionDetail?) -> Void)
-    func getCategoryDetail(from relativePath: String, completion: @escaping (DetailModel.CategoryDetail?) -> Void)
+    func getCategories(path: String, completion: @escaping ((Result<[String], NetworkError>) -> Void))
+    func getProducts(searchText: String,
+                     completion: @escaping ((Result<ResultOfSearchModel, NetworkError>) -> Void))
+    func getMainDetail(from relativePath: String,
+                       completion: @escaping ((Result<DetailModel.MainDetail, NetworkError>) -> Void))
+    func getDescriptionDetail(from relativePath: String,
+                              completion: @escaping ((Result<DetailModel.DescriptionDetail, NetworkError>) -> Void))
+    func getCategoryDetail(from relativePath: String,
+                           completion: @escaping ((Result<DetailModel.CategoryDetail, NetworkError>) -> Void))
 }
 
 class ServiceProvider: ServiceProviderProtocol {
-    func getCategories(completion: @escaping ([String]) -> Void) {
-        completion([])
+    static let shared: ServiceProviderProtocol = ServiceProvider()
+    
+    private init() { }
+    
+    func getCategories(path: String, completion: @escaping ((Result<[String], NetworkError>) -> Void)) {
+        completion(.failure(.noData))
     }
-    func getProducts(searchText: String, completion: @escaping (ResultOfSearchModel?) -> Void) {
-        completion(nil)
+    func getProducts(searchText: String,
+                     completion: @escaping ((Result<ResultOfSearchModel, NetworkError>) -> Void)) {
+        completion(.failure(.invalidURL))
     }
     
-    func getMainDetail(from relativePath: String, completion: @escaping (DetailModel.MainDetail?) -> Void) {
-        completion(nil)
+    func getMainDetail(from relativePath: String,
+                       completion: @escaping ((Result<DetailModel.MainDetail, NetworkError>) -> Void)) {
+        completion(.failure(.invalidURL))
     }
     
-    func getDescriptionDetail(from relativePath: String, completion: @escaping (DetailModel.DescriptionDetail?) -> Void) {
-        completion(nil)
+    func getDescriptionDetail(from relativePath: String,
+                              completion: @escaping ((Result<DetailModel.DescriptionDetail, NetworkError>) -> Void)) {
+        completion(.failure(.invalidURL))
     }
     
-    func getCategoryDetail(from relativePath: String, completion: @escaping (DetailModel.CategoryDetail?) -> Void) {
-        completion(nil)
+    func getCategoryDetail(from relativePath: String,
+                           completion: @escaping ((Result<DetailModel.CategoryDetail, NetworkError>) -> Void)) {
+        completion(.failure(.invalidURL))
     }
 }
 
-class ServiceProviderMock: ServiceProviderProtocol {
+final class ServiceProviderMock: ServiceProviderProtocol {
+    static let shared: ServiceProviderProtocol = ServiceProviderMock()
+    private let jsonDecoder = JSONDecoder()
+    
+    private init() {
+        jsonDecoder.keyDecodingStrategy = .convertFromSnakeCase
+    }
+    
     // MARK: - Search screen
-    func getCategories(completion: @escaping ([String]) -> Void) {
-        guard let resourcesURL = Bundle.main.resourceURL?.appendingPathComponent("Mocks") else {
-            return completion([])
+    func getCategories(path: String, completion: @escaping ((Result<[String], NetworkError>) -> Void)) {
+        guard let resourcesURL = Bundle.main.resourceURL?.appendingPathComponent(path),
+              let folderContents = try? FileManager.default.contentsOfDirectory(at: resourcesURL, includingPropertiesForKeys: nil) else {
+            return completion(.failure(.invalidURL))
         }
         
-        let folderContents = try? FileManager.default.contentsOfDirectory(at: resourcesURL, includingPropertiesForKeys: nil)
-        let categories = folderContents?.compactMap { $0.lastPathComponent } ?? []
-        return completion(categories)
+        let categories = folderContents.compactMap { $0.lastPathComponent }
+        guard !categories.isEmpty else {
+            return completion(.failure(.noData))
+        }
+        
+        return completion(.success(categories))
     }
     
     // MARK: - ResultOfSearch screen
-    func getProducts(searchText: String, completion: @escaping (ResultOfSearchModel?) -> Void) {
+    func getProducts(searchText: String, completion: @escaping ((Result<ResultOfSearchModel, NetworkError>) -> Void)) {
         guard let jsonUrl = Bundle.main.resourceURL?.appendingPathComponent("Mocks/\(searchText)/search-MLA-\(searchText).json") else {
-            return completion(nil)
+            return completion(.failure(.invalidURL))
         }
-        print(jsonUrl)
-        if let data = try? Data(contentsOf: jsonUrl),
-           let products = try? JSONDecoder().decode(ResultOfSearchModel.self, from: data){
-            return completion(products)
+        
+        guard let data = try? Data(contentsOf: jsonUrl) else {
+            return completion(.failure(.noData))
         }
-        else {
-            return completion(nil)
+        
+        guard let products = try? jsonDecoder.decode(ResultOfSearchModel.self, from: data) else {
+            return completion(.failure(.decodingFailed))
         }
+        
+        return completion(.success(products))
     }
     
     // MARK: - Detail screen
-    func getMainDetail(from relativePath: String, completion: @escaping (DetailModel.MainDetail?) -> Void) {
+    func getMainDetail(from relativePath: String,
+                       completion: @escaping ((Result<DetailModel.MainDetail, NetworkError>) -> Void)) {
         guard let jsonUrl = Bundle.main.resourceURL?.appendingPathComponent("Mocks/\(relativePath).json") else {
-            return completion(nil)
-        }
-        let jsonDecoder = JSONDecoder()
-        jsonDecoder.keyDecodingStrategy = .convertFromSnakeCase
-        if let data = try? Data(contentsOf: jsonUrl),
-           let productMainDetail = try? jsonDecoder.decode(DetailModel.MainDetail.self, from: data) {
-            debugPrint(productMainDetail)
-            return completion(productMainDetail)
-        } else {
-            return completion(nil)
-        }
-    }
-    
-    func getDescriptionDetail(from relativePath: String, completion: @escaping (DetailModel.DescriptionDetail?) -> Void) {
-        guard let jsonUrl = Bundle.main.resourceURL?.appendingPathComponent("Mocks/\(relativePath)-description.json") else {
-            return completion(nil)
+            return completion(.failure(.invalidURL))
         }
         
-        let jsonDecoder = JSONDecoder()
-        jsonDecoder.keyDecodingStrategy = .convertFromSnakeCase
-        if let data = try? Data(contentsOf: jsonUrl),
-           let productDescriptionDetail = try? jsonDecoder.decode(DetailModel.DescriptionDetail.self, from: data) {
-            return completion(productDescriptionDetail)
-        } else {
-            return completion(nil)
+        guard let data = try? Data(contentsOf: jsonUrl) else {
+            return completion(.failure(.noData))
         }
+        
+        guard let productMainDetail = try? jsonDecoder.decode(DetailModel.MainDetail.self, from: data) else {
+            return completion(.failure(.decodingFailed))
+        }
+        
+        return completion(.success(productMainDetail))
     }
     
-    func getCategoryDetail(from relativePath: String, completion: @escaping (DetailModel.CategoryDetail?) -> Void) {
-        guard let jsonUrl = Bundle.main.resourceURL?.appendingPathComponent("Mocks/\(relativePath)-category.json") else {
-            return completion(nil)
+    func getDescriptionDetail(from relativePath: String,
+                              completion: @escaping ((Result<DetailModel.DescriptionDetail, NetworkError>) -> Void)) {
+        guard let jsonUrl = Bundle.main.resourceURL?.appendingPathComponent("Mocks/\(relativePath)-description.json") else {
+            return completion(.failure(.invalidURL))
         }
-        print(jsonUrl)
-        let jsonDecoder = JSONDecoder()
-        jsonDecoder.keyDecodingStrategy = .convertFromSnakeCase
-        if let data = try? Data(contentsOf: jsonUrl),
-           let productCategoryDetail = try? jsonDecoder.decode(DetailModel.CategoryDetail.self, from: data) {
-            return completion(productCategoryDetail)
-        } else {
-            return completion(nil)
+        
+        guard let data = try? Data(contentsOf: jsonUrl) else {
+            return completion(.failure(.noData))
         }
+        
+        guard let productDescriptionDetail = try? jsonDecoder.decode(DetailModel.DescriptionDetail.self, from: data) else {
+            return completion(.failure(.decodingFailed))
+        }
+        
+        return completion(.success(productDescriptionDetail))
+    }
+    
+    func getCategoryDetail(from relativePath: String,
+                           completion: @escaping ((Result<DetailModel.CategoryDetail, NetworkError>) -> Void)) {
+        
+        guard let jsonUrl = Bundle.main.resourceURL?.appendingPathComponent("Mocks/\(relativePath)-description.json") else {
+            return completion(.failure(.invalidURL))
+        }
+        
+        guard let data = try? Data(contentsOf: jsonUrl) else {
+            return completion(.failure(.noData))
+        }
+        
+        guard let productCategoryDetail = try? jsonDecoder.decode(DetailModel.CategoryDetail.self, from: data) else {
+            return completion(.failure(.decodingFailed))
+        }
+        
+        return completion(.success(productCategoryDetail))
     }
 }

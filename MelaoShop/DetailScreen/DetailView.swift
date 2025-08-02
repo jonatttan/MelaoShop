@@ -15,23 +15,33 @@ struct DetailView: View {
     
     var body: some View {
         VStack {
-            List {
-                image
-                
-                Text(viewModel.title)
-                LabeledContent("Preço") {
-                    Text(viewModel.price, format: .currency(code: "BRL"))
-                }
-                
-                LabeledContent("Descrição", value: viewModel.description)
-                LabeledContent("Caminho na loja", value: viewModel.productPath)
-                
-                attributesInfo
-                
-                termsInfo
+            if viewModel.errorType != nil {
+                Text(viewModel.errorMessage)
+                    .padding()
+            } else {
+                detailViewElement
             }
         }
         .onAppear(perform: viewModel.getDetail)
+    }
+    
+    @ViewBuilder
+    var detailViewElement: some View {
+        List {
+            image
+            
+            Text(viewModel.title)
+            LabeledContent("Preço") {
+                Text(viewModel.price, format: .currency(code: "BRL"))
+            }
+            
+            LabeledContent("Descrição", value: viewModel.description)
+            LabeledContent("Caminho na loja", value: viewModel.productPath)
+            
+            attributesInfo
+            
+            termsInfo
+        }
     }
     
     @ViewBuilder

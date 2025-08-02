@@ -21,6 +21,21 @@ struct SearchView: View {
     }
     
     var body: some View {
+        ZStack {
+            if viewModel.hasError {
+                Text("Erro ao consultar os servidores, tente novamente mais tarde.")
+                    .padding()
+            } else {
+                searchViewElement
+            }
+        }
+        .onAppear {
+            viewModel.loadCategories()
+        }
+    }
+    
+    @ViewBuilder
+    var searchViewElement: some View {
         NavigationStack {
             Text("O que gostaria de pesquisar hoje?")
                 .navigationTitle("Buscar")
@@ -34,9 +49,6 @@ struct SearchView: View {
             ForEach(resultOfSearch, id: \.self) { category in
                 Text("Procurando por \(category)?").searchCompletion(category)
             }
-        }
-        .onAppear {
-            viewModel.loadCategories()
         }
         .onSubmit(of: .search, searchAction)
     }

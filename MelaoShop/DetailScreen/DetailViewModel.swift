@@ -12,10 +12,20 @@ class DetailViewModel: ObservableObject {
     @Published var categoryDetail: DetailModel.CategoryDetail?
     private let relativePath: String
     private let provider: ServiceProviderProtocol
+    @Published var errorType: NetworkError?
     
     init(relativePath: String) {
-        self.provider = kIsMock ? ServiceProviderMock() : ServiceProvider()
+        self.provider = kIsMock ? ServiceProviderMock.shared : ServiceProvider.shared
         self.relativePath = relativePath
+    }
+    
+    var errorMessage: String {
+        switch errorType {
+        case .noData:
+            return "Erro ao obter dados do produto"
+        default:
+            return "Erro ao comunicar com servidor, tente novamente mais tarde"
+        }
     }
     
     var pictureUrl: String {
@@ -58,20 +68,36 @@ class DetailViewModel: ObservableObject {
     
     func getDetail() {
         DispatchQueue.main.async {
-            self.provider.getMainDetail(from: self.relativePath) { mainDetail in
-                self.mainDetail = mainDetail
+            self.provider.getMainDetail(from: self.relativePath) { result in
+                switch result {
+                case .success(let mainDetail):
+                    self.errorType = nil
+                    return self.mainDetail = mainDetail
+                case .failure(let error):
+                    return self.errorType = error
+                }
             }
         }
         
         DispatchQueue.main.async {
-            self.provider.getDescriptionDetail(from: self.relativePath) { descriptionDetail in
-                self.descriptionDetail = descriptionDetail
+            self.provider.getDescriptionDetail(from: self.relativePath) { result in
+                switch result {
+                case .success(let descriptionDetail):
+                    return self.descriptionDetail = descriptionDetail
+                case .failure(_):
+                    return
+                }
             }
         }
         
         DispatchQueue.main.async {
-            self.provider.getCategoryDetail(from: self.relativePath) { categoryDetail in
-                self.categoryDetail = categoryDetail
+            self.provider.getCategoryDetail(from: self.relativePath) { result in
+                switch result {
+                case .success(let categoryDetail):
+                    return self.categoryDetail = categoryDetail
+                case .failure(_):
+                    return
+                }
             }
         }
     }
